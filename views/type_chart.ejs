@@ -1,0 +1,38 @@
+<%- include('header') %>
+
+<h1 class="h1">📊 TABLA DE TIPOS</h1>
+
+<section class="type-chart-legend">
+  <p><span class="legend-box type-high"></span> Súper efectivo (2×)</p>
+  <p><span class="legend-box type-low"></span> Poco efectivo (0.5×)</p>
+  <p><span class="legend-box type-none"></span> Sin efecto (0×)</p>
+  <p><span class="legend-box type-normal"></span> Normal (1×)</p>
+</section>
+
+<section class="type-chart-section">
+  <table class="type-chart-table">
+    <thead>
+      <tr>
+        <th>Ataque \ Defensa</th>
+        <% types.forEach(function(t) { %>
+          <th><%= t %></th>
+        <% }) %>
+      </tr>
+    </thead>
+    <tbody>
+      <% types.forEach(function(atk) { %>
+        <tr>
+          <th><%= atk %></th>
+          <% types.forEach(function(def) { %>
+            <% var mult = typeChart[atk]?.[def] ?? 1 %>
+            <td class="<%= mult === 0 ? 'type-none' : mult < 1 ? 'type-low' : mult > 1 ? 'type-high' : 'type-normal' %>">
+              <%= mult %>
+            </td>
+          <% }) %>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+</section>
+
+<%- include('footer') %>

@@ -1,0 +1,53 @@
+<%- include('header') %>
+<h1 class="h1">📋 POKÉMONS DISPONIBLES</h1>
+
+<div style="text-align:center; margin:10px 0;">
+  <a href="/choose" class="btn-random">⚔️ IR A PELEAR</a>
+</div>
+
+<div style="overflow-x:auto; width:95%; margin:0 auto;">
+<table class="table">
+  <thead>
+    <tr>
+      <th>Nombre</th>
+      <th>Tipo 1</th>
+      <th>Tipo 2</th>
+      <th>HP</th>
+      <th>Attack</th>
+      <th>Defense</th>
+      <th>Sp. Atk</th>
+      <th>Sp. Def</th>
+      <th>Speed</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% data.forEach(function(row) { %>
+    <tr>
+      <td><%= row.name %></td>
+      <td><%= row.type1 %></td>
+      <td><%= row.type2 || '-' %></td>
+      <td><%= row.hp %></td>
+      <td><%= row.attack %></td>
+      <td><%= row.defense %></td>
+      <td><%= row.sp_attack %></td>
+      <td><%= row.sp_defense %></td>
+      <td><%= row.speed %></td>
+    </tr>
+    <% }) %>
+  </tbody>
+</table>
+</div>
+
+<% if (totalPages > 1) { %>
+<div class="pagination">
+  <a href="/characters?page=1" class="<%= !hasPrev ? 'disabled' : '' %>">⏮</a>
+  <a href="/characters?page=<%= prevPage %>" class="<%= !hasPrev ? 'disabled' : '' %>">◀</a>
+  <span style="color:#ffcb05; font-size:1.3em; margin:0 15px;">
+    Página <%= page %> de <%= totalPages %>
+  </span>
+  <a href="/characters?page=<%= nextPage %>" class="<%= !hasNext ? 'disabled' : '' %>">▶</a>
+  <a href="/characters?page=<%= totalPages %>" class="<%= !hasNext ? 'disabled' : '' %>">⏭</a>
+</div>
+<% } %>
+
+<%- include('footer') %>

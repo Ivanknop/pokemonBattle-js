@@ -1,29 +1,9 @@
 services:
   - type: web
-    name: pokemon-battle-api
+    name: pokemon-battle
     env: node
-    rootDir: backend
-    buildCommand: npm install && npm run build
+    buildCommand: npm install
     startCommand: npm start
     envVars:
       - key: NODE_ENV
         value: production
-      - key: DATABASE_URL
-        fromDatabase:
-          name: pokemon-db
-          property: connectionString
-
-  - type: web
-    name: pokemon-battle-frontend
-    env: static
-    rootDir: frontend
-    buildCommand: npm install && npm run build
-    staticPublishPath: ./dist
-    envVars:
-      - key: VITE_API_URL
-        value: https://pokemon-battle-api.onrender.com/api
-
-databases:
-  - name: pokemon-db
-    databaseName: pokemon
-    plan: free

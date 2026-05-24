@@ -1,0 +1,34 @@
+<%- include('header') %>
+<h1 class="h1">⚔️ ELIGE A TU POKÉMON</h1>
+
+<div class="local-form">
+  <form method="GET" action="/fight" id="fightForm">
+    <table class="table">
+      <tr>
+        <th><h2 class="h2-pokemon">🐱 PERSONAJE PRINCIPAL</h2></th>
+        <th><h2 class="h2-pokemon">🐉 RIVAL (aleatorio)</h2></th>
+      </tr>
+      <tr>
+        <td>
+          <label class="select_pokemon" for="player">Elige tu Pokémon:</label>
+          <select class="select_pokemon" name="player" id="player">
+            <% pokemonDb.forEach(function(p) { %>
+            <option value="<%= p.name %>"><%= p.name %> - <%= p.type1 %><%= p.type2 ? ' / ' + p.type2 : '' %></option>
+            <% }) %>
+          </select>
+          <span id="playerSelected" style="color:#2ecc71; font-size:0.9em; display:block; text-align:center; margin-top:5px;"></span>
+        </td>
+        <td>
+          <p style="color:#f0e6d0; text-align:center;">🎲 El rival se elegirá al azar</p>
+        </td>
+      </tr>
+    </table>
+    <input class="button-chose-character" type="submit" value="⚔️ ¡A PELEAR!">
+  </form>
+</div>
+
+<div class="random-container">
+  <a href="/fight/random" class="btn-random">🎲 PELEA ALEATORIA</a>
+</div>
+
+<%- include('footer') %>
