@@ -2,7 +2,7 @@
 
 <% if (finished) { %>
   <section class="winner-banner">
-    Ganador: <%= winner %> Pokémon (<%= winnerRole %>)
+    ¡Ganador: <%= winnerRole %> con <%= winner %>! (Duración: <%= round %> ronda<% if (round !== 1) { %>s<% } %>)
   </section>
 <% } %>
 

@@ -96,6 +96,7 @@ app.post('/start-fight', (req, res) => {
   req.session.fighterTwo = pokemonToSession(rival);
   req.session.events = [];
   req.session.finished = false;
+  req.session.round = 0;
   req.session.winner = null;
   req.session.winnerRole = null;
   req.session.playerLuck = 0;
@@ -117,6 +118,7 @@ app.get('/fight', (req, res) => {
     fighterTwo,
     events: req.session.events || [],
     finished: req.session.finished || false,
+    round: req.session.round || 0,
     winner: req.session.winner,
     winnerRole: req.session.winnerRole,
     playerLuck: req.session.playerLuck || 0,
@@ -136,6 +138,7 @@ app.post('/fight/next', (req, res) => {
   const fighterTwo = pokemonFromSession(f2Data);
   const battle = new Fight(fighterOne, fighterTwo);
 
+  req.session.round = (req.session.round || 0) + 1;
   const playerLuck = parseInt(req.session.playerLuck || 0, 10);
   const opponentLuck = parseInt(req.session.opponentLuck || 0, 10);
   const result = battle.playTurn(playerLuck, opponentLuck);
