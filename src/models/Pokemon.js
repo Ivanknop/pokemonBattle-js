@@ -23,9 +23,11 @@ class Pokemon {
     };
   }
 
+  get_name() { return this.name; }
   getHp() { return this.hp; }
   giveHit() { return (this.attack + this.sp_attack) / 2; }
   takeHit(damage) { this.hp = Math.max(0, this.hp - damage); }
+  energyWins(energy) { this.hp += (this.hp * energy) / 100; }
   isAlive() { return this.hp > 0; }
 
   bloqText() {

@@ -248,6 +248,241 @@ footer {
 footer p, footer .icon { text-align: center; font-size: 0.85rem; }
 footer .icon { color: var(--yellow); }
 
+.pokemon-card,
+.table,
+.select_pokemon,
+.figth,
+.battle-events,
+.luck-panel,
+.winner-box,
+.winner-banner {
+  border: var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.battle-events,
+.luck-panel,
+.select_pokemon,
+.figth,
+.winner-box {
+  margin: 2rem auto;
+  padding: 1.25rem;
+  background-color: var(--white);
+}
+
+.battle-events,
+.luck-panel,
+.next-turn-form {
+  width: 100%;
+  max-width: 850px;
+}
+
+.battle-container {
+  width: 100%;
+  max-width: 950px;
+  margin: 2rem auto;
+  display: grid;
+  grid-template-columns: minmax(260px, 360px) 100px minmax(260px, 360px);
+  gap: 1.5rem;
+  align-items: center;
+  justify-content: center;
+}
+
+.pokemon-card {
+  min-height: 180px;
+  padding: 1.25rem;
+  text-align: center;
+  background-color: var(--card);
+}
+
+.pokemon-card h2 {
+  margin: 0 0 0.75rem;
+  color: var(--blue);
+  font-size: 1.7rem;
+  text-shadow: none;
+}
+
+.pokemon-card p {
+  margin: 0.4rem 0 1rem;
+  color: var(--blue-dark);
+  font-weight: 700;
+}
+
+.versus {
+  text-align: center;
+  font-family: var(--title-font);
+  font-size: 2.8rem;
+  color: var(--yellow);
+  text-shadow: 3px 3px 0 var(--blue), 5px 5px 0 var(--blue-dark);
+}
+
+.hp-box {
+  width: 80%;
+  margin: 1rem auto 0;
+  padding: 0.75rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: var(--blue-dark);
+  border: 4px solid var(--yellow);
+  border-radius: 14px;
+}
+
+.hp-label {
+  color: var(--yellow);
+  font-size: 1.1rem;
+  font-weight: 900;
+}
+
+.hp-value {
+  color: var(--white);
+  font-size: 2.2rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.luck-panel {
+  text-align: center;
+}
+
+.luck-panel h3,
+.battle-events h3,
+.winner-box h2 {
+  margin: 0 0 1rem;
+  color: var(--blue-dark);
+  text-shadow: none;
+}
+
+.current-luck,
+.luck-actions {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
+.current-luck div {
+  min-width: 140px;
+  padding: 0.8rem;
+  background-color: var(--blue-dark);
+  border: 4px solid var(--yellow);
+  border-radius: 14px;
+}
+
+.luck-label,
+.luck-value {
+  display: block;
+  font-weight: 900;
+}
+
+.luck-label {
+  margin-bottom: 0.3rem;
+  color: var(--yellow);
+}
+
+.luck-value {
+  color: var(--white);
+  font-size: 2rem;
+}
+
+.pending-luck {
+  margin-top: 1rem;
+  padding: 1rem;
+  background-color: var(--sky);
+  border: 3px solid var(--blue-dark);
+  border-radius: 14px;
+}
+
+.luck-button {
+  display: block;
+  margin: 1.5rem auto;
+  padding: 0.75rem 1.5rem;
+  background-color: var(--yellow);
+  color: var(--blue-dark);
+  border: 4px solid var(--blue-dark);
+  border-radius: 12px;
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.35);
+  font-family: var(--font);
+  font-size: 1.1rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.luck-button:hover {
+  background-color: var(--red);
+  color: var(--white);
+  transform: translateY(-2px);
+}
+
+.luck-button:active {
+  transform: translateY(2px);
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.35);
+}
+
+.roll-luck {
+  background-color: var(--yellow);
+  color: var(--blue-dark);
+}
+
+.accept-luck {
+  background-color: #4caf50;
+  color: var(--white);
+}
+
+.reject-luck {
+  background-color: var(--red);
+  color: var(--white);
+}
+
+.luck-used-message {
+  margin-top: 1rem;
+  color: var(--blue-dark);
+  font-weight: 800;
+}
+
+.battle-events ul {
+  list-style: none;
+}
+
+.battle-events li {
+  margin-bottom: 0.6rem;
+  padding: 0.7rem;
+  background-color: var(--sky);
+  border: 2px solid var(--blue-dark);
+  border-radius: 10px;
+  font-weight: 700;
+}
+
+.winner-box {
+  max-width: 600px;
+  text-align: center;
+  background-color: var(--yellow);
+}
+
+.winner-banner {
+  width: 90%;
+  max-width: 900px;
+  margin: 2rem auto 1rem;
+  padding: 1.5rem;
+  text-align: center;
+  background-color: var(--yellow);
+  color: var(--blue-dark);
+  font-family: var(--font);
+  font-size: 2.6rem;
+  font-weight: 900;
+}
+
+.next-turn-form {
+  margin: 1rem auto 0;
+  display: flex;
+  justify-content: center;
+}
+
+.next-turn-form .button-chose-character {
+  margin: 0 auto;
+}
+
 .fight { margin-bottom: 0.6rem; padding: 0.7rem; background-color: var(--sky); border: 2px solid var(--blue-dark); border-radius: 10px; font-weight: 700; }
 .fight.block { background-color: #fff3cd; color: #856404; }
 .fight.hit { background-color: #f8d7da; color: #721c24; }
@@ -313,10 +548,16 @@ footer .icon { color: var(--yellow); }
 
 @media (max-width: 850px) {
     h1, .h1 { font-size: 2.4rem; }
-    .nav-local { flex-direction: column; align-items: center; }
-    .nav-link { width: 90%; text-align: center; }
+    .nav-local, .current-luck, .luck-actions { flex-direction: column; align-items: center; }
+    .nav-link, .luck-button { width: 90%; text-align: center; }
     .logo { width: 85%; margin-top: 2rem; }
     .table { width: 95%; font-size: 0.9rem; }
     .table th, .table td { padding: 0.5rem; }
     .select_pokemon { width: 92%; }
+    .battle-container { grid-template-columns: 1fr; max-width: 420px; }
+    .pokemon-card { min-height: auto; }
+    .versus { font-size: 2.4rem; }
+    .hp-value { font-size: 2rem; }
+    .winner-banner { padding: 1rem; font-size: 1.8rem; }
+    .current-luck div { width: 80%; }
 }

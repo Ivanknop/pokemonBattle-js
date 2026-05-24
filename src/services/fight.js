@@ -1,113 +1,94 @@
+const { TypeChart, TYPE_CHART } = require('./TypeChart');
+const CombatRules = require('./CombatRules');
+
 class Fight {
-  constructor(fighterOne, fighterTwo) {
-    this.fighterOne = fighterOne;
-    this.fighterTwo = fighterTwo;
+  constructor(fighterOne, fighterTwo, combatRules, rng) {
+    this._fighterOne = fighterOne;
+    this._fighterTwo = fighterTwo;
+    this._rng = rng || { randrange: (a, b) => Math.floor(Math.random() * (b - a)) + a };
+    this._combatRules = combatRules || new CombatRules(new TypeChart(TYPE_CHART));
   }
 
-  /**
-   * SIMULTANEOUS COMBAT — both pokemon attack each round.
-   * Includes type effectiveness, dodge, block, and critical hits.
-   */
-  fight() {
-    const hitList = [];
-    let round = 0;
-    const maxRounds = 100;
+  getFighterOne() { return this._fighterOne; }
+  getFighterTwo() { return this._fighterTwo; }
+  getCombatRules() { return this._combatRules; }
 
-    while (this.fighterOne.isAlive() && this.fighterTwo.isAlive() && round < maxRounds) {
-      round++;
-      const roundEvents = [];
-
-      this.resolveAttack(this.fighterOne, this.fighterTwo, roundEvents);
-
-      if (this.fighterTwo.isAlive()) {
-        this.resolveAttack(this.fighterTwo, this.fighterOne, roundEvents);
-      }
-
-      roundEvents.forEach((e) => hitList.push(e));
+  orderToHit(playerLuck, opponentLuck) {
+    const f1Initiative = this._combatRules.initiativeScore(this.getFighterOne(), playerLuck);
+    const f2Initiative = this._combatRules.initiativeScore(this.getFighterTwo(), opponentLuck);
+    if (f1Initiative >= f2Initiative) {
+      return [this.getFighterOne(), this.getFighterTwo()];
     }
-
-    const winner = this.fighterOne.isAlive() ? this.fighterOne : this.fighterTwo;
-    hitList.push(`🏆 La batalla ha terminado. ¡Vencedor: ${winner.name}!`);
-    return hitList;
+    return [this.getFighterTwo(), this.getFighterOne()];
   }
 
-  resolveAttack(attacker, defender, events) {
-    const typeChart = getTypeChart();
+  playTurn(playerLuck, opponentLuck) {
+    playerLuck = parseInt(playerLuck, 10);
+    opponentLuck = parseInt(opponentLuck, 10);
 
-    // Type effectiveness
-    const typeMult = typeMultiplier(typeChart, attacker.type1, defender.type1, defender.type2);
-
-    // Dodge chance (based on speed difference)
-    const dodgeChance = Math.max(0, (defender.speed - attacker.speed) / 500);
-    if (Math.random() < dodgeChance) {
-      events.push(defender.dodgeText());
-      return;
+    if (!this.bothFightersAreAlive()) {
+      const w = this.winner();
+      if (w === null) return ['La batalla terminó sin vencedor.'];
+      return ['La batalla ya terminó. Vencedor ' + w.get_name()];
     }
 
-    // Hit roll
-    const atkRoll = attacker.speed * 0.3 + attacker.attack * 0.4 + Math.random() * 30;
-    const defRoll = defender.speed * 0.4 + defender.defense * 0.3 + Math.random() * 30;
-
-    if (atkRoll < defRoll) {
-      events.push(attacker.bloqText());
-      return;
+    const [firstAttacker, secondAttacker] = this.orderToHit(playerLuck, opponentLuck);
+    const events = [];
+    events.push(this.attackOnce(firstAttacker, secondAttacker, playerLuck, opponentLuck));
+    if (secondAttacker.isAlive()) {
+      events.push(this.attackOnce(secondAttacker, firstAttacker, playerLuck, opponentLuck));
     }
-
-    // Damage
-    const offensive = attacker.attack * 0.6 + attacker.sp_attack * 0.4;
-    const defensive = defender.defense * 0.5 + defender.sp_defense * 0.3;
-    let damage = Math.max(1, Math.round((offensive - defensive) * typeMult));
-
-    // Block (defender much faster)
-    if (defender.speed >= attacker.speed * 1.5 && Math.random() < 0.3) {
-      damage = Math.max(1, Math.round(damage * 0.25));
-      events.push(`${defender.name} bloqueó parcialmente el ataque, recibiendo solo ${damage} de daño`);
-      defender.takeHit(damage);
-      return;
-    }
-
-    // Critical hit
-    const critChance = 0.05 + (attacker.speed - defender.speed) / 1000;
-    if (Math.random() < Math.max(0.01, critChance)) {
-      damage = Math.round(damage * 2);
-      events.push(attacker.critText(damage));
-    } else {
-      events.push(attacker.hitText(damage));
-    }
-
-    defender.takeHit(damage);
+    return events;
   }
-}
 
-function typeMultiplier(chart, attackType, defType1, defType2) {
-  let mult = chart[attackType.toLowerCase()]?.[defType1.toLowerCase()] ?? 1;
-  if (defType2 && defType2 !== '') {
-    mult *= chart[attackType.toLowerCase()]?.[defType2.toLowerCase()] ?? 1;
+  bothFightersAreAlive() {
+    return this.getFighterTwo().isAlive() && this.getFighterOne().isAlive();
   }
-  return mult;
-}
 
-function getTypeChart() {
-  return {
-    normal: { rock: 0.5, ghost: 0, steel: 0.5 },
-    fire: { fire: 0.5, water: 0.5, grass: 2, ice: 2, bug: 2, rock: 0.5, dragon: 0.5, steel: 2 },
-    water: { fire: 2, water: 0.5, grass: 0.5, ground: 2, rock: 2, dragon: 0.5 },
-    electric: { water: 2, electric: 0.5, grass: 0.5, ground: 0, flying: 2, dragon: 0.5 },
-    grass: { fire: 0.5, water: 2, grass: 0.5, poison: 0.5, ground: 2, flying: 0.5, bug: 0.5, rock: 2, dragon: 0.5, steel: 0.5 },
-    ice: { fire: 0.5, water: 0.5, grass: 2, ice: 0.5, ground: 2, flying: 2, dragon: 2, steel: 0.5 },
-    fighting: { normal: 2, ice: 2, poison: 0.5, flying: 0.5, psychic: 0.5, bug: 0.5, rock: 2, ghost: 0, dark: 2, steel: 2, fairy: 0.5 },
-    poison: { grass: 2, poison: 0.5, ground: 0.5, rock: 0.5, ghost: 0.5, steel: 0, fairy: 2 },
-    ground: { fire: 2, electric: 2, grass: 0.5, poison: 2, flying: 0, bug: 0.5, rock: 2, steel: 2 },
-    flying: { electric: 0.5, grass: 2, fighting: 2, bug: 2, rock: 0.5, steel: 0.5 },
-    psychic: { fighting: 2, poison: 2, psychic: 0.5, dark: 0, steel: 0.5 },
-    bug: { fire: 0.5, grass: 2, fighting: 0.5, poison: 0.5, flying: 0.5, psychic: 2, ghost: 0.5, dark: 2, steel: 0.5, fairy: 0.5 },
-    rock: { fire: 2, ice: 2, fighting: 0.5, ground: 0.5, flying: 2, bug: 2, steel: 0.5 },
-    ghost: { normal: 0, psychic: 2, ghost: 2, dark: 0.5 },
-    dragon: { dragon: 2, steel: 0.5, fairy: 0 },
-    dark: { fighting: 0.5, psychic: 2, ghost: 2, dark: 0.5, fairy: 0.5 },
-    steel: { fire: 0.5, water: 0.5, electric: 0.5, ice: 2, rock: 2, steel: 0.5, fairy: 2 },
-    fairy: { fire: 0.5, fighting: 2, poison: 0.5, dragon: 2, dark: 2, steel: 0.5 },
-  };
+  winner() {
+    if (this._fighterOne.isAlive() && !this._fighterTwo.isAlive()) return this._fighterOne;
+    if (this._fighterTwo.isAlive() && !this._fighterOne.isAlive()) return this._fighterTwo;
+    return null;
+  }
+
+  attackOnce(attacker, defender, playerLuck, opponentLuck) {
+    const [attackerLuck, defenderLuck] = this.luckFor(attacker, defender, playerLuck, opponentLuck);
+    const defenderInitialHp = defender.getHp();
+    const damage = this._combatRules.calculateTurnDamage(attacker, defender, attackerLuck, defenderLuck);
+    if (damage > 0) defender.takeHit(damage);
+    return this.turnText(attacker, defender, damage, attackerLuck, defenderLuck, defenderInitialHp);
+  }
+
+  luckFor(attacker, defender, playerLuck, opponentLuck) {
+    if (attacker === this._fighterOne) return [playerLuck, opponentLuck];
+    return [opponentLuck, playerLuck];
+  }
+
+  turnText(attacker, defender, damage, attackerLuck, defenderLuck, defenderInitialHp) {
+    const attackerName = attacker.get_name();
+    const defenderName = defender.get_name();
+
+    if (this._combatRules.isAutomaticFailure(attackerLuck)) {
+      return `${attackerName} falló`;
+    }
+    if (this._combatRules.isBlocked(attacker, defender, attackerLuck, defenderLuck)) {
+      return `${defenderName} bloqueó a ${attackerName} y solo recibió ${damage} de daño`;
+    }
+    if (this._combatRules.criticalMultiplier(attacker, defender, attackerLuck, defenderLuck) > 1) {
+      return `${attackerName} ha dado un crítico dañando por ${damage} a ${defenderName}`;
+    }
+    if (defenderInitialHp <= 0) {
+      return `${attackerName} ha dado un buen golpe por ${damage} a ${defenderName}`;
+    }
+    const damageRatio = damage / defenderInitialHp;
+    if (damageRatio > 0.5) {
+      return `${attackerName} dio un duro golpe de ${damage} a ${defenderName}`;
+    }
+    if (damageRatio < 0.1) {
+      return `${attackerName} golpeó suavemente y solo le hizo ${damage} a ${defenderName}`;
+    }
+    return `${attackerName} ha dado un buen golpe por ${damage} a ${defenderName}`;
+  }
 }
 
 module.exports = Fight;

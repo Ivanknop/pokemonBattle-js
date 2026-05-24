@@ -1,7 +1,11 @@
 const express = require('express');
 const path = require('path');
+const session = require('express-session');
+
 const Pokemon = require('./models/Pokemon');
 const Fight = require('./services/fight');
+const { TypeChart, TYPE_CHART } = require('./services/TypeChart');
+const CombatRules = require('./services/CombatRules');
 
 require('dotenv').config({ path: path.resolve(__dirname, '..', '.env') });
 
@@ -14,6 +18,42 @@ app.set('views', path.resolve(__dirname, '..', 'views'));
 
 app.use(express.static(path.resolve(__dirname, '..', 'public')));
 app.use(express.urlencoded({ extended: true }));
+app.use(session({
+  secret: 'pokemon-secret',
+  resave: false,
+  saveUninitialized: false,
+}));
+
+function dbRowToPokemon(row) {
+  return new Pokemon(
+    row.name, row.type1, row.type2 || '',
+    row.attack, row.defense, row.sp_attack, row.sp_defense,
+    row.speed, row.hp, row.total,
+  );
+}
+
+function pokemonToSession(p) {
+  return {
+    name: p.name,
+    type1: p.type1,
+    type2: p.type2,
+    attack: p.attack,
+    defense: p.defense,
+    sp_attack: p.sp_attack,
+    sp_defense: p.sp_defense,
+    speed: p.speed,
+    hp: p.hp,
+    total: p.total,
+  };
+}
+
+function pokemonFromSession(data) {
+  return new Pokemon(
+    data.name, data.type1, data.type2,
+    data.attack, data.defense, data.sp_attack, data.sp_defense,
+    data.speed, data.hp, data.total,
+  );
+}
 
 app.get('/', (req, res) => {
   res.render('index');
@@ -33,57 +73,126 @@ app.get('/characters', (req, res) => {
 });
 
 app.get('/choose', (req, res) => {
-  res.render('choose_character', { pokemonDb: Pokemon.findAll() });
+  const all = Pokemon.findAll();
+  for (let i = all.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [all[i], all[j]] = [all[j], all[i]];
+  }
+  res.render('choose_character', { pokemonDb: all });
 });
 
-app.get('/fight', (req, res) => {
-  const playerName = req.query.player;
+app.post('/start-fight', (req, res) => {
+  const playerName = req.body.player;
   const pokemonRow = Pokemon.findByName(playerName);
   if (!pokemonRow) return res.status(404).send(`Pokémon "${playerName}" no encontrado`);
 
   const rivalRow = Pokemon.randomExcluding(playerName);
   if (!rivalRow) return res.status(400).send('No hay rivales disponibles');
 
+  const player = dbRowToPokemon(pokemonRow);
+  const rival = dbRowToPokemon(rivalRow);
+
+  req.session.fighterOne = pokemonToSession(player);
+  req.session.fighterTwo = pokemonToSession(rival);
+  req.session.events = [];
+  req.session.finished = false;
+  req.session.winner = null;
+  req.session.winnerRole = null;
+  req.session.playerLuck = 0;
+  req.session.opponentLuck = 0;
+  req.session.pendingPlayerLuck = null;
+  req.session.pendingOpponentLuck = null;
+  req.session.luckUsedThisTurn = false;
+
+  res.redirect('/fight');
+});
+
+app.get('/fight', (req, res) => {
+  const fighterOne = req.session.fighterOne;
+  const fighterTwo = req.session.fighterTwo;
+  if (!fighterOne || !fighterTwo) return res.redirect('/choose');
+
   res.render('fight', {
-    player: pokemonRow,
-    rival: rivalRow,
-    playerData: JSON.stringify(pokemonRow),
-    rivalData: JSON.stringify(rivalRow),
+    fighterOne,
+    fighterTwo,
+    events: req.session.events || [],
+    finished: req.session.finished || false,
+    winner: req.session.winner,
+    winnerRole: req.session.winnerRole,
+    playerLuck: req.session.playerLuck || 0,
+    opponentLuck: req.session.opponentLuck || 0,
+    pendingPlayerLuck: req.session.pendingPlayerLuck,
+    pendingOpponentLuck: req.session.pendingOpponentLuck,
+    luckUsedThisTurn: req.session.luckUsedThisTurn || false,
   });
 });
 
-app.get('/fight/random', (req, res) => {
-  const all = Pokemon.findAll();
-  if (all.length < 2) return res.status(400).send('Se necesitan al menos 2 pokémon');
-  const shuffled = all.sort(() => Math.random() - 0.5);
-  res.render('fight', {
-    player: shuffled[0], rival: shuffled[1],
-    playerData: JSON.stringify(shuffled[0]),
-    rivalData: JSON.stringify(shuffled[1]),
+app.post('/fight/next', (req, res) => {
+  const f1Data = req.session.fighterOne;
+  const f2Data = req.session.fighterTwo;
+  if (!f1Data || !f2Data) return res.redirect('/choose');
+
+  const fighterOne = pokemonFromSession(f1Data);
+  const fighterTwo = pokemonFromSession(f2Data);
+  const battle = new Fight(fighterOne, fighterTwo);
+
+  const playerLuck = parseInt(req.session.playerLuck || 0, 10);
+  const opponentLuck = parseInt(req.session.opponentLuck || 0, 10);
+  const result = battle.playTurn(playerLuck, opponentLuck);
+
+  req.session.fighterOne = pokemonToSession(fighterOne);
+  req.session.fighterTwo = pokemonToSession(fighterTwo);
+
+  const events = req.session.events || [];
+  for (let i = result.length - 1; i >= 0; i--) {
+    events.unshift(result[i]);
+  }
+  req.session.events = events;
+
+  const winner = battle.winner();
+  if (winner !== null) {
+    req.session.finished = true;
+    req.session.winner = winner.get_name();
+    req.session.winnerRole = winner.get_name() === fighterOne.get_name() ? 'Jugador' : 'Rival';
+  }
+
+  req.session.playerLuck = 0;
+  req.session.opponentLuck = 0;
+  req.session.pendingPlayerLuck = null;
+  req.session.pendingOpponentLuck = null;
+  req.session.luckUsedThisTurn = false;
+
+  res.redirect('/fight');
+});
+
+app.post('/fight/luck', (req, res) => {
+  const combatRules = new CombatRules(new TypeChart(TYPE_CHART));
+  const luckPair = combatRules.rollLuckPair({
+    randrange: (a, b) => Math.floor(Math.random() * (b - a)) + a,
   });
+
+  req.session.pendingPlayerLuck = luckPair.playerLuck;
+  req.session.pendingOpponentLuck = luckPair.opponentLuck;
+  req.session.luckUsedThisTurn = true;
+
+  res.redirect('/fight');
+});
+
+app.post('/fight/luck/accept', (req, res) => {
+  req.session.playerLuck = req.session.pendingPlayerLuck || 0;
+  req.session.opponentLuck = req.session.pendingOpponentLuck || 0;
+  req.session.pendingPlayerLuck = null;
+  req.session.pendingOpponentLuck = null;
+  res.redirect('/fight');
+});
+
+app.post('/fight/luck/reject', (req, res) => {
+  req.session.pendingPlayerLuck = null;
+  req.session.pendingOpponentLuck = null;
+  res.redirect('/fight');
 });
 
 app.get('/type-chart', (req, res) => {
-  const TYPE_CHART = {
-    normal: { rock: 0.5, ghost: 0, steel: 0.5 },
-    fire: { fire: 0.5, water: 0.5, grass: 2, ice: 2, bug: 2, rock: 0.5, dragon: 0.5, steel: 2 },
-    water: { fire: 2, water: 0.5, grass: 0.5, ground: 2, rock: 2, dragon: 0.5 },
-    electric: { water: 2, electric: 0.5, grass: 0.5, ground: 0, flying: 2, dragon: 0.5 },
-    grass: { fire: 0.5, water: 2, grass: 0.5, poison: 0.5, ground: 2, flying: 0.5, bug: 0.5, rock: 2, dragon: 0.5, steel: 0.5 },
-    ice: { fire: 0.5, water: 0.5, grass: 2, ice: 0.5, ground: 2, flying: 2, dragon: 2, steel: 0.5 },
-    fighting: { normal: 2, ice: 2, poison: 0.5, flying: 0.5, psychic: 0.5, bug: 0.5, rock: 2, ghost: 0, dark: 2, steel: 2, fairy: 0.5 },
-    poison: { grass: 2, poison: 0.5, ground: 0.5, rock: 0.5, ghost: 0.5, steel: 0, fairy: 2 },
-    ground: { fire: 2, electric: 2, grass: 0.5, poison: 2, flying: 0, bug: 0.5, rock: 2, steel: 2 },
-    flying: { electric: 0.5, grass: 2, fighting: 2, bug: 2, rock: 0.5, steel: 0.5 },
-    psychic: { fighting: 2, poison: 2, psychic: 0.5, dark: 0, steel: 0.5 },
-    bug: { fire: 0.5, grass: 2, fighting: 0.5, poison: 0.5, flying: 0.5, psychic: 2, ghost: 0.5, dark: 2, steel: 0.5, fairy: 0.5 },
-    rock: { fire: 2, ice: 2, fighting: 0.5, ground: 0.5, flying: 2, bug: 2, steel: 0.5 },
-    ghost: { normal: 0, psychic: 2, ghost: 2, dark: 0.5 },
-    dragon: { dragon: 2, steel: 0.5, fairy: 0 },
-    dark: { fighting: 0.5, psychic: 2, ghost: 2, dark: 0.5, fairy: 0.5 },
-    steel: { fire: 0.5, water: 0.5, electric: 0.5, ice: 2, rock: 2, steel: 0.5, fairy: 2 },
-    fairy: { fire: 0.5, fighting: 2, poison: 0.5, dragon: 2, dark: 2, steel: 0.5 },
-  };
   res.render('type_chart', {
     typeChart: TYPE_CHART,
     types: Object.keys(TYPE_CHART).sort(),
@@ -94,7 +203,6 @@ app.use((req, res) => {
   res.status(404).render('index');
 });
 
-// Auto-seed on first run (important for Render ephemeral storage)
 const db = require('./db');
 const row = db.prepare('SELECT COUNT(*) as count FROM pokemon').get();
 if (row.count === 0) {
