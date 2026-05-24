@@ -1,0 +1,24 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Pokemon {
+  id        Int    @id @default(autoincrement())
+  name      String @unique
+  type1     String
+  type2     String?
+  attack    Float
+  defense   Float
+  spAttack  Float  @map("sp_attack")
+  spDefense Float  @map("sp_defense")
+  speed     Float
+  hp        Float
+  total     Float
+
+  @@map("pokemon")
+}
