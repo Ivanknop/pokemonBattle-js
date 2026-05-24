@@ -4,7 +4,7 @@
   "scripts": {
     "dev": "ts-node-dev --respawn src/index.ts",
     "build": "npx prisma generate && tsc && cp -r prisma dist/ && cp -r data dist/",
-    "start": "npx prisma generate && npx prisma db push && node dist/seed.js && node dist/index.js",
+    "start": "npx prisma generate && npx prisma db push && node dist/seed.js ; node dist/index.js",
     "seed": "ts-node src/seed.ts",
     "seed:prod": "node dist/seed.js"
   },

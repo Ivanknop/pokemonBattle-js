@@ -28,22 +28,21 @@ async function seed() {
     records.push(record as CsvRow);
   }
 
-  for (const row of records) {
-    await prisma.pokemon.create({
-      data: {
-        name: row.name,
-        type1: row.type1,
-        type2: row.type2 || null,
-        attack: parseFloat(row.attack),
-        defense: parseFloat(row.defense),
-        spAttack: parseFloat(row.sp_attack),
-        spDefense: parseFloat(row.sp_defense),
-        speed: parseFloat(row.speed),
-        hp: parseFloat(row.hp),
-        total: parseFloat(row.total),
-      },
-    });
-  }
+  await prisma.pokemon.createMany({
+    data: records.map((row) => ({
+      name: row.name,
+      type1: row.type1,
+      type2: row.type2 || null,
+      attack: parseFloat(row.attack),
+      defense: parseFloat(row.defense),
+      spAttack: parseFloat(row.sp_attack),
+      spDefense: parseFloat(row.sp_defense),
+      speed: parseFloat(row.speed),
+      hp: parseFloat(row.hp),
+      total: parseFloat(row.total),
+    })),
+    skipDuplicates: true,
+  });
 
   console.log(`Seeded ${records.length} Pokemon.`);
   await prisma.$disconnect();
