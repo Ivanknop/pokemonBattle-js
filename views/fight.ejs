@@ -6,92 +6,68 @@
   </section>
 <% } %>
 
-<h1>Batalla Pokémon</h1>
-
-<section class="battle-container">
-  <div class="pokemon-card">
-    <h2><%= fighterOne.name %></h2>
-    <p>
-      Tipo: <%= fighterOne.type1 %><% if (fighterOne.type2) { %> / <%= fighterOne.type2 %><% } %>
-    </p>
-    <div class="hp-box">
-      <span class="hp-label">HP</span>
-      <span class="hp-value"><%= Math.round(fighterOne.hp) %></span>
-    </div>
-  </div>
-
-  <div class="versus">VS</div>
-
-  <div class="pokemon-card">
-    <h2><%= fighterTwo.name %></h2>
-    <p>
-      Tipo: <%= fighterTwo.type1 %><% if (fighterTwo.type2) { %> / <%= fighterTwo.type2 %><% } %>
-    </p>
-    <div class="hp-box">
-      <span class="hp-label">HP</span>
-      <span class="hp-value"><%= Math.round(fighterTwo.hp) %></span>
-    </div>
-  </div>
-</section>
-
-<% if (!finished) { %>
-  <section class="luck-panel">
-    <h3>Suerte del turno</h3>
-
-    <div class="current-luck">
-      <div>
-        <span class="luck-label">Jugador</span>
-        <span class="luck-value"><%= playerLuck %></span>
-      </div>
-      <div>
-        <span class="luck-label">Rival</span>
-        <span class="luck-value"><%= opponentLuck %></span>
+<div class="core-screen">
+  <section class="battle-container">
+    <div class="pokemon-card">
+      <h2><%= fighterOne.name %></h2>
+      <p>Tipo: <%= fighterOne.type1 %><% if (fighterOne.type2) { %> / <%= fighterOne.type2 %><% } %></p>
+      <div class="hp-box">
+        <span class="hp-label">HP</span>
+        <span class="hp-value"><%= Math.round(fighterOne.hp) %></span>
       </div>
     </div>
 
-    <% if (pendingPlayerLuck !== null && pendingPlayerLuck !== undefined) { %>
-      <div class="pending-luck">
-        <h4>Nueva tirada</h4>
-        <div class="current-luck">
-          <div>
-            <span class="luck-label">Jugador</span>
-            <span class="luck-value"><%= pendingPlayerLuck %></span>
-          </div>
-          <div>
-            <span class="luck-label">Rival</span>
-            <span class="luck-value"><%= pendingOpponentLuck %></span>
-          </div>
-        </div>
+    <div class="versus">VS</div>
 
-        <div class="luck-actions">
-          <form action="/fight/luck/accept" method="post">
-            <button type="submit" class="luck-button accept-luck">Aceptar nueva suerte</button>
+    <div class="pokemon-card">
+      <h2><%= fighterTwo.name %></h2>
+      <p>Tipo: <%= fighterTwo.type1 %><% if (fighterTwo.type2) { %> / <%= fighterTwo.type2 %><% } %></p>
+      <div class="hp-box">
+        <span class="hp-label">HP</span>
+        <span class="hp-value"><%= Math.round(fighterTwo.hp) %></span>
+      </div>
+    </div>
+  </section>
+
+  <div class="fight-controls">
+    <% if (!finished) { %>
+      <div class="luck-bar">
+        <span class="luck-current">
+          Suerte: <strong><%= playerLuck %></strong> (Jug) / <strong><%= opponentLuck %></strong> (Riv)
+        </span>
+
+        <% if (pendingPlayerLuck !== null && pendingPlayerLuck !== undefined) { %>
+          <span class="luck-pending">
+            Nueva: <strong><%= pendingPlayerLuck %></strong> / <strong><%= pendingOpponentLuck %></strong>
+          </span>
+          <form action="/fight/luck/accept" method="post" class="luck-form">
+            <button type="submit" class="luck-btn accept-luck">Aceptar</button>
           </form>
-          <form action="/fight/luck/reject" method="post">
-            <button type="submit" class="luck-button reject-luck">Quedarme con la suerte actual</button>
+          <form action="/fight/luck/reject" method="post" class="luck-form">
+            <button type="submit" class="luck-btn reject-luck">Rechazar</button>
           </form>
-        </div>
+        <% } else if (!luckUsedThisTurn) { %>
+          <form action="/fight/luck" method="post" class="luck-form">
+            <button type="submit" class="luck-btn roll-luck">Tirar suerte</button>
+          </form>
+        <% } else { %>
+          <span class="luck-used">Suerte usada este turno</span>
+        <% } %>
       </div>
-    <% } else if (!luckUsedThisTurn) { %>
-      <form action="/fight/luck" method="post">
-        <button type="submit" class="luck-button roll-luck">Tirar suerte</button>
-      </form>
-    <% } else { %>
-      <p class="luck-used-message">Ya usaste la tirada de suerte este turno.</p>
     <% } %>
-  </section>
-<% } %>
 
-<% if (finished) { %>
-  <section class="winner-box">
-    <h2>Vencedor: <%= winner %></h2>
-    <a href="/choose" class="button-chose-character">Nueva batalla</a>
-  </section>
-<% } else { %>
-  <form action="/fight/next" method="post" class="next-turn-form">
-    <button type="submit" class="button-chose-character">Nuevo turno</button>
-  </form>
-<% } %>
+    <% if (finished) { %>
+      <div class="winner-actions">
+        <span class="winner-text">Vencedor: <%= winner %></span>
+        <a href="/choose" class="btn-fight">Nueva batalla</a>
+      </div>
+    <% } else { %>
+      <form action="/fight/next" method="post" class="next-turn-form">
+        <button type="submit" class="btn-fight">Nuevo turno</button>
+      </form>
+    <% } %>
+  </div>
+</div>
 
 <section class="battle-events">
   <h3>Historial de batalla</h3>
