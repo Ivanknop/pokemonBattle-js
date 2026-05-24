@@ -73,12 +73,7 @@ app.get('/characters', (req, res) => {
 });
 
 app.get('/choose', (req, res) => {
-  const all = Pokemon.findAll();
-  for (let i = all.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [all[i], all[j]] = [all[j], all[i]];
-  }
-  res.render('choose_character', { pokemonDb: all });
+  res.render('choose_character', { pokemonDb: Pokemon.findAll() });
 });
 
 app.post('/start-fight', (req, res) => {
