@@ -8,6 +8,7 @@ let db;
 
 function getDb() {
   if (!db) {
+    fs.mkdirSync(path.dirname(dbPath), { recursive: true });
     db = new Database(dbPath);
     db.pragma("journal_mode = WAL");
   }
