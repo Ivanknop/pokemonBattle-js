@@ -1,0 +1,34 @@
+<%- include('header') %>
+
+<h1 class="h1">TABLA DE PERSONAJES</h1>
+    
+    <table class="table bg-info">
+        <thead cellpadding="1.0" cellspacing="1.0">
+            <tr>
+                <th>Nombre</th>          
+                <th>Tipo 1</th>
+                <th>Tipo 2</th>
+                <th>HP</th>
+                <th>Attack</th>
+                <th>Defense</th>
+                <th>Special Attack</th> 
+                <th>Special Defense</th>
+                <th>Speed</th>
+            </tr>
+            <% for(let row of data) { %>
+            <tr>
+                <td><%= row.getName() %></td>
+                <td><%= row.getPrincipalType() %></td>
+                <td><%= row.getSecondaryType() || '' %></td>
+                <td><%= row.getVitality() %></td>
+                <td><%= row.getCharacteristics()["attack"] %></td>
+                <td><%= row.getCharacteristics()["defense"] %></td>
+                <td><%= row.getCharacteristics()["sp_attack"] %></td>
+                <td><%= row.getCharacteristics()["sp_defense"] %></td>
+                <td><%= row.getCharacteristics()["speed"] %></td>
+            </tr>
+            <% } %>
+        </thead>
+    </table>
+
+<%- include('footer') %>

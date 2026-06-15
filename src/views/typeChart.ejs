@@ -1,0 +1,48 @@
+<%- include('header') %>
+
+<h1>Tabla de tipos</h1>
+<section class="type-chart-legend">
+    <p><span class="legend-box type-high"></span> Súper efectivo</p>
+    <p><span class="legend-box type-low"></span> Poco efectivo</p>
+    <p><span class="legend-box type-none"></span> Sin efecto</p>
+    <p><span class="legend-box type-normal"></span> Normal</p>
+</section>
+<section class="type-chart-section">
+    <table class="type-chart-table">
+        <thead>
+            <tr>
+                <th>Ataque \ Defensa</th>
+                <% for(let defenderType of types) { %>
+                    <th><%= defenderType %></th>
+                <% } %>
+            </tr>
+        </thead>
+
+        <tbody>
+            <% for(let attackerType of types) { %>
+                <tr>
+                    <th><%= attackerType %></th>
+
+                    <% for(let defenderType of types) { %>
+                        <% 
+                            let multiplier = 1;
+                            if(type_chart[attackerType] && type_chart[attackerType][defenderType] !== undefined) {
+                                multiplier = type_chart[attackerType][defenderType];
+                            }
+                            let tdClass = 'type-normal';
+                            if(multiplier === 0) tdClass = 'type-none';
+                            else if(multiplier < 1) tdClass = 'type-low';
+                            else if(multiplier > 1) tdClass = 'type-high';
+                        %>
+
+                        <td class="<%= tdClass %>">
+                            <%= multiplier %>
+                        </td>
+                    <% } %>
+                </tr>
+            <% } %>
+        </tbody>
+    </table>
+</section>
+
+<%- include('footer') %>
